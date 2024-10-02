@@ -120,7 +120,7 @@ clean:
 #---------------------------------------------------------------------------------
 run : $(TARGET).nds
 	@echo "runing $(TARGET).nds with DesmuME"
-	@$(DESMUME)/DeSmuME.exe $(TARGET).nds &
+	@$(DESMUME) $(TARGET).nds &
 
 #---------------------------------------------------------------------------------
 debug : $(TARGET).nds $(TARGET).elf
