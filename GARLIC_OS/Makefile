@@ -14,6 +14,16 @@ ifeq ($(strip $(DESMUME)),)
 $(error "Please set DESMUME in your environment. export DESMUME=<path to>DeSmuME")
 endif
 
+UNAME_S=$(shell uname -s)
+
+ifeq ($(UNAME_S), Linux)
+    DESMUME_EXE = $(DESMUME)
+	DESMUME_DEBUG = $(DESMUME)
+else
+	DESMUME_EXE = $(DESMUME)/DeSmuME.exe
+	DESMUME_DEBUG = $(DESMUME)/DeSmuME_dev.exe
+endif
+
 include $(DEVKITARM)/base_rules
 
 #-------------------------------------------------------------------------------
@@ -120,12 +130,12 @@ clean:
 #---------------------------------------------------------------------------------
 run : $(TARGET).nds
 	@echo "runing $(TARGET).nds with DesmuME"
-	@$(DESMUME) $(TARGET).nds &
+	@$(DESMUME_EXE) $(TARGET).nds &
 
 #---------------------------------------------------------------------------------
 debug : $(TARGET).nds $(TARGET).elf
 	@echo "testing $(TARGET).nds/.elf with DeSmuME_dev/Insight (gdb) through TCP port=1000"
-	@$(DESMUME)/DeSmuME_dev.exe --arm9gdb=1000 $(TARGET).nds &
+	@$(DESMUME_DEBUG) --arm9gdb=1000 $(TARGET).nds &
 	@$(DEVKITPRO)/insight/bin/arm-eabi-insight $(TARGET).elf &
 
 #---------------------------------------------------------------------------------
