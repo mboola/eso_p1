@@ -13,6 +13,7 @@
 
 extern int * punixTime;		// puntero a zona de memoria con el tiempo real
 
+# define INI_MEM_TEST 0x01002000	// inicio de la ITCM donde cargar los programas
 
 /* Inicializaciones generales del sistema Garlic */
 //------------------------------------------------------------------------------
@@ -103,9 +104,14 @@ static void	test_progams()
 
 static void test_header()
 {
+	*(unsigned char *)INI_MEM_TEST = 0;
+	printf("Value in Ipc at start: %d\n", *(unsigned char *)INI_MEM_TEST);
 	intFunc start = _gm_cargarPrograma("HOLA");
 	if (start == (intFunc) 0)
 		printf("Error\n");
+	printf("*** Direccion de arranque :\n\t\t%p\n", start);
+	start(1);
+	printf("Value in Ipc at end: %d\n", *(unsigned char *)INI_MEM_TEST);
 }
 
 

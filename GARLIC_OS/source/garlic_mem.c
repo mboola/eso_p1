@@ -10,11 +10,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <dirent.h>
 
 #include "garlic_system.h"	// definici�n de funciones y variables de sistema
 #include "garlic_mem.h"
 
 unsigned int	current_mem_ptr = INI_MEM;
+int offsetSegment = 0;
 
 /* _gm_initFS: inicializa el sistema de ficheros, devolviendo un valor booleano
 					para indiciar si dicha inicializaci�n ha tenido �xito;
@@ -83,70 +85,99 @@ static char	copy_memory(void *mem_src, unsigned int size)
 {
 	if (current_mem_ptr + size > FINAL_MEM)
 		return (ERROR);
-	_gs_copiaMem(mem_src, (void *)current_mem_ptr, size);
 
-	printf("Mem start: %x\n", current_mem_ptr);
+	printf("Dir to copy:\n");
+	printf("Mem src: %x\n",(const void *) mem_src);
+	printf("Mem dst: %x\n", (void *) (current_mem_ptr));
+	printf("Size: %d\n", size);
+	_gs_copiaMem(mem_src, (void *)current_mem_ptr, size);
 	current_mem_ptr += size;
-	printf("Mem finish: %x\n", current_mem_ptr);
+	current_mem_ptr += current_mem_ptr % 4;
+	return (CORRECT);
 }
 
-static char	store_segments(int n_segments, Elf32_Ehdr *header)
+static char	copy_segments(char *buffered_file)
 {
-	int				i;
-	void			*segment_table;
-	Elf32_Phdr		*curr_segment;
-	unsigned int	mem_src;
+	Elf32_Ehdr	*header;
+	int			i;
+	Elf32_Phdr	*curr_segment;
 
+	header = (Elf32_Ehdr *)buffered_file;
 	i = 0;
-	//print_header(header);
-	segment_table = ((void *)header + header->e_phoff);
-	while (i < n_segments)
+	while (i < header->e_phnum)
 	{
-		curr_segment = (Elf32_Phdr *)(segment_table + i * header->e_phentsize);
+		curr_segment = (Elf32_Phdr *)(buffered_file + header->e_phoff + i * header->e_phentsize);
 		//print_segment(curr_segment);
-		if (curr_segment->p_type == PT_LOAD && curr_segment->p_filesz != 0)
+		if (curr_segment->p_type == PT_LOAD && curr_segment->p_filesz != 0) //&& curr_segment->p_filesz != 0
 		{
-			mem_src = current_mem_ptr;
-			// Obtain the ptr where the segment starts and the size of memory it has to copy.
-			if (!copy_memory((void *)header + curr_segment->p_offset, curr_segment->p_filesz))
+			if (!copy_memory((void *)(buffered_file + curr_segment->p_offset), curr_segment->p_memsz))
 				return (ERROR);
-			// Relocate pointers inside sections using header, theoric starting addr and real starting addr.
-			_gm_reubicar((void *)header, curr_segment->p_paddr, (unsigned int *)mem_src);
 		}
 		i++;
 	}
 	return (CORRECT);
 }
 
-static char	parse_file(FILE *file, Elf32_Buffer *buffer)
+static void	reallocate_mem(char *buffered_file, int initial_mem, Elf32_Addr *e_entry)
 {
-	struct stat		st;
-	int				fd;
-	char			*file_data;
-	Elf32_Ehdr		*header;
+	Elf32_Phdr	*first_segment;
+	Elf32_Ehdr	*header;
 
-	fd = fileno(file);
-	if (fstat(fd, &st) != 0)
+	header = (Elf32_Ehdr *)buffered_file;
+
+	// We assume there will only be one segment of code to load.
+	// All reallocations will be made based on the first segment loaded.
+	first_segment = (Elf32_Phdr *)(buffered_file + header->e_phoff);
+
+	//printf("Dir to rellocate:\n");
+	//printf("Mem src: %x\n",(const void *) buffered_file);
+	//printf("Mem dst: %x\n", (unsigned int *) (first_segment->p_paddr));
+	//printf("Size: %d\n", (unsigned int) initial_mem);
+	_gm_reubicar(buffered_file, (unsigned int)(first_segment->p_paddr), (unsigned int *)(initial_mem));
+
+	*e_entry = initial_mem + header->e_entry - first_segment->p_paddr;
+}
+
+/*
+ *	We read from the .elf in parts to reserve less memory.
+ *	Not all file is needed.
+ */
+static char	parse_file(FILE *file, int *e_entry)
+{
+	char	*buffered_file;
+	int		size;
+	int		initial_mem;
+
+	initial_mem = current_mem_ptr;
+	if (fseek(file, 0, SEEK_END))
 		return (ERROR);
-	file_data = malloc(st.st_size + 1);
-	if (file_data == NULL)
+	size = ftell (file);
+	if (size == -1)
 		return (ERROR);
-	if (fread(file_data, 1, st.st_size, file) != st.st_size)
+
+	buffered_file = malloc(sizeof(char) * size);
+	if (buffered_file == NULL)
+		return (ERROR);
+	if (fseek(file, 0, SEEK_SET))
 	{
-		free(file_data);
+		free(buffered_file);
 		return (ERROR);
 	}
-	*(file_data + st.st_size) = '\0'; // In case I want to print it with printf
+	if (fread(buffered_file, sizeof(char), size, file) != size)
+	{
+		free(buffered_file);
+		return (ERROR);
+	}
 	
-	header = (Elf32_Ehdr *)file_data;
-
-	if (!store_segments(header->e_phnum, header) == ERROR)
+	if (copy_segments(buffered_file) == ERROR)
 	{
-		free(file_data);
+		free(buffered_file);
 		return (ERROR);
 	}
-	buffer->entry = header->e_entry;
-	free(file_data);
+
+	reallocate_mem(buffered_file, initial_mem, e_entry);
+	
+	free(buffered_file);
 	return (CORRECT);
 }
 
@@ -165,9 +196,9 @@ static char	parse_file(FILE *file, Elf32_Buffer *buffer)
 */
 intFunc _gm_cargarPrograma(char *keyName)
 {
-	char			file_name[20] = "/Programas/XXXX.elf";
-	FILE*			file;
-	Elf32_Buffer	elf_buffer;
+	char	file_name[20] = "/Programas/XXXX.elf";
+	FILE*	file;
+	int		e_entry;
 
 	if (!follows_convention(keyName))
 		return ((intFunc) ERROR);
@@ -181,11 +212,11 @@ intFunc _gm_cargarPrograma(char *keyName)
 	if (file == NULL)
 		return ((intFunc) ERROR);
 
-	if (!parse_file(file, &elf_buffer))
+	if (!parse_file(file, &e_entry))
 	{
 		fclose(file);
 		return ((intFunc) ERROR);
 	}
 	fclose(file);
-	return ((intFunc) elf_buffer.entry);
+	return ((intFunc) e_entry);
 }

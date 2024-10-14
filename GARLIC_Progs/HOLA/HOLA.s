@@ -94,6 +94,9 @@ _start:
 	ldr	r3, [sp, #12]
 	cmp	r2, r3
 	bcc	.L7
+	ldr	r3, .L9+8
+	mov	r2, #1
+	strb	r2, [r3]
 	mov	r3, #0
 	mov	r0, r3
 	add	sp, sp, #28
@@ -104,5 +107,6 @@ _start:
 .L9:
 	.word	.LC0
 	.word	.LC1
+	.word	16785408
 	.size	_start, .-_start
 	.ident	"GCC: (15:10.3-2021.07-4) 10.3.1 20210621 (release)"
