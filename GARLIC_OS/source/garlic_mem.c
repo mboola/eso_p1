@@ -86,10 +86,10 @@ static char	copy_memory(void *mem_src, unsigned int size)
 	if (current_mem_ptr + size > FINAL_MEM)
 		return (ERROR);
 
-	printf("Dir to copy:\n");
-	printf("Mem src: %x\n",(const void *) mem_src);
-	printf("Mem dst: %x\n", (void *) (current_mem_ptr));
-	printf("Size: %d\n", size);
+	//printf("Dir to copy:\n");
+	//printf("Mem src: %x\n",(const void *) mem_src);
+	//printf("Mem dst: %x\n", (void *) (current_mem_ptr));
+	//printf("Size: %d\n", size);
 	_gs_copiaMem(mem_src, (void *)current_mem_ptr, size);
 	current_mem_ptr += size;
 	current_mem_ptr += current_mem_ptr % 4;

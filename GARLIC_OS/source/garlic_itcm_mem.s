@@ -24,12 +24,12 @@
 	@; cambio de las direcciones de memoria que se tienen que ajustar
 _gm_reubicar:
 
-	@; Buscamos la seccion de reubicadores
 	@; Para cada seccion de "R_ARM_ABS32" obtenemos:
 		@; Obtener direccion mem dst de la posicion a reubicar
 		@; Aplicar direccion a mem src del reubicador
 
 	push {r0-r12, lr}
+	@; Buscamos la seccion de reubicadores
 	ldr r4, [r0, #32]		@; Offset de la primera tabla: e_shoff = 16 char* de e_ident + 2 half + 3 word = 16 + 2*2 + 3*4 = 32 bytes
 	ldrh r5, [r0, #48]		@; Cantidad de tablas : e_shnum = 16 char* de e_ident + 6 half + 5 word = 16 + 6*2 + 5*4 = 48 bytes 
 	ldrh r12, [r0, #46]		@; Valor para calcular offset de la siguiente tabla de seciones

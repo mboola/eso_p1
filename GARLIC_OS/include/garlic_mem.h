@@ -3,7 +3,7 @@
 
 # include <sys/stat.h>
 
-# define INI_MEM 0x01004000	// inicio de la ITCM donde cargar los programas
+# define INI_MEM 0x01002000	// inicio de la ITCM donde cargar los programas
 # define FINAL_MEM 0x01008000 // final de la ITCM donde cargar los programas
 
 # define PT_LOAD 1
