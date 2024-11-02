@@ -57,7 +57,7 @@ GARLIC_fopen:
 	ldr pc, [r4, #20]		@; llamada indirecta a rutina 0x05
 	pop {r4, pc}
 
-	.global GARLIC_GARLIC_fread
+	.global GARLIC_fread
 GARLIC_fread:
 	push {r4, lr}
 	mov r4, #0
@@ -65,7 +65,7 @@ GARLIC_fread:
 	ldr pc, [r4, #24]		@; llamada indirecta a rutina 0x06
 	pop {r4, pc}
 
-	.global GARLIC_GARLIC_fclose
+	.global GARLIC_fclose
 GARLIC_fclose:
 	push {r4, lr}
 	mov r4, #0

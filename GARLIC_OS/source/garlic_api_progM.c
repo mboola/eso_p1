@@ -1,17 +1,18 @@
+#include <nds.h>
+#include <filesystem.h>
 #include <stdio.h>
 
 FILE	*_ga_fopen(const char * filename, const char * mode)
 {
-    printf("Read filename\n");
-    return 0;
+	return (fopen(filename, mode));
 }
 
 int _ga_fread(void * buffer, size_t size, size_t numele, FILE * file)
 {
-    return 0;
+	return (fread(buffer, size, numele, file));
 }
 
 int _ga_fclose(FILE * file)
 {
-    return 0;
+	return (fclose(file));
 }

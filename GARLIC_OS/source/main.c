@@ -102,6 +102,15 @@ static void	test_progams()
 
 static void test_header()
 {
+	intFunc start = _gm_cargarPrograma("HOLA");
+	if (start == (intFunc) 0)
+		printf("Error\n");
+	printf("*** Direccion de arranque :\n\t\t%p\n", start);
+	start(1);
+}
+
+static void test_api()
+{
 	intFunc start = _gm_cargarPrograma("OPEN");
 	if (start == (intFunc) 0)
 		printf("Error\n");
@@ -126,7 +135,9 @@ int main(int argc, char **argv) {
 	//TODO : wait for a button to be pressed and then load new programs
 	//test_progams();
 
-	test_header();
+	//test_header();
+
+	test_api();
 
 	printf("*** Final fase 1_M\n");
 
