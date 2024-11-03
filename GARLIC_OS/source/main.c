@@ -111,11 +111,11 @@ static void test_header()
 
 static void test_api()
 {
-	intFunc start = _gm_cargarPrograma("OPEN");
+	intFunc start = _gm_cargarPrograma("DOTP");
 	if (start == (intFunc) 0)
 		printf("Error\n");
 	printf("*** Direccion de arranque :\n\t\t%p\n", start);
-	start(1);
+	start(2);
 }
 
 

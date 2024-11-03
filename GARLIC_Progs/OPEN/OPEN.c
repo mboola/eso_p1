@@ -1,10 +1,7 @@
 /*------------------------------------------------------------------------------
 
-	"HOLA.c" : primer programa de prueba para el sistema operativo GARLIC 1.0;
-	
-	Imprime el t�pico mensaje "Hello world!" por una ventana de GARLIC, un
-	n�mero aleatorio de veces, dentro de un rango entre 1 y 10 elevado al
-	argumento ([0..3]), es decir, hasta 1, 10, 100 o 1000 iteraciones.
+	"OPEN.c" : abre, lee y muestra por pantalla los primeros 7 caracteres
+	de un fichero
 
 ------------------------------------------------------------------------------*/
 
